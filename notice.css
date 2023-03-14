@@ -1,0 +1,13 @@
+#notice{
+    max-width: 90vw;
+    height: 40px;
+    text-align: right;
+}
+
+#notice-text {
+    font-size: 30px;
+    padding: 10px;
+    background: red;
+    white-space: nowrap;
+    -webkit-animation: rightThenLeft 4s linear;
+}
