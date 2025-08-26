@@ -4,187 +4,136 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Image Resizer & Converter</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f4f6f8;
-      color: #333;
-    }
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    }
-    h2 {
-      text-align: center;
-    }
-    input, select, button {
-      width: 100%;
-      margin: 8px 0;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
-    canvas {
-      max-width: 100%;
-      margin-top: 15px;
-      border: 1px solid #ccc;
-    }
-    .error {
-      color: red;
-      font-weight: bold;
-    }
-    .success {
-      color: green;
-      font-weight: bold;
-    }
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f9; color: #333; }
+    h1 { text-align: center; }
+    .container { max-width: 600px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    input, select, button { margin: 10px 0; padding: 8px; width: 100%; }
+    canvas { max-width: 100%; margin-top: 20px; }
+    .warning { color: red; font-weight: bold; }
+    .info { margin-top: 10px; font-size: 14px; color: #555; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Image Resizer & Converter</h2>
-    <input type="file" id="upload" accept="image/*" /><label>Resize Mode:</label>
-<select id="mode">
-  <option value="pixels">By Pixels</option>
-  <option value="scale">By Scale (%)</option>
-  <option value="dpi">By Size & DPI</option>
+    <h1>Image Resizer & Converter</h1>
+    <input type="file" id="upload" accept="image/*"><label>Resize Mode:</label>
+<select id="resizeMode">
+  <option value="scale">Scale (%)</option>
+  <option value="pixels">Dimensions (px)</option>
+  <option value="dpi">Physical Size + DPI</option>
 </select>
 
-<div id="pixelInputs">
-  <input type="number" id="width" placeholder="Width (px)" />
-  <input type="number" id="height" placeholder="Height (px)" />
+<div id="scaleBox">
+  <label>Scale (%):</label>
+  <input type="number" id="scale" value="100">
 </div>
 
-<div id="scaleInput" style="display:none">
-  <input type="number" id="scale" placeholder="Scale %" value="100" />
+<div id="pixelBox" style="display:none;">
+  <label>Width (px):</label>
+  <input type="number" id="width">
+  <label>Height (px):</label>
+  <input type="number" id="height">
 </div>
 
-<div id="dpiInputs" style="display:none">
-  <input type="number" id="printWidth" placeholder="Width (cm)" />
-  <input type="number" id="printHeight" placeholder="Height (cm)" />
-  <input type="number" id="dpi" placeholder="DPI" value="300" />
+<div id="dpiBox" style="display:none;">
+  <label>Width (cm):</label>
+  <input type="number" id="cmWidth">
+  <label>Height (cm):</label>
+  <input type="number" id="cmHeight">
+  <label>DPI:</label>
+  <input type="number" id="dpi" value="300">
 </div>
 
 <label>Output Format:</label>
 <select id="format">
   <option value="image/jpeg">JPEG</option>
   <option value="image/png">PNG</option>
-  <option value="image/webp">WebP</option>
+  <option value="image/webp">WEBP</option>
 </select>
 
 <label>Max File Size (KB):</label>
-<input type="number" id="maxSize" placeholder="e.g. 200 (KB)" />
+<input type="number" id="maxSize" value="300">
 
-<button id="apply">Apply & Preview</button>
+<button onclick="processImage()">Apply & Preview</button>
+<a id="download" style="display:none;"><button>Download</button></a>
 
+<div class="info" id="resultInfo"></div>
 <canvas id="canvas"></canvas>
-<p id="info"></p>
-<p id="previewSize"></p>
-
-<button id="download" style="display:none">Download</button>
 
   </div>  <script>
     const upload = document.getElementById('upload');
-    const mode = document.getElementById('mode');
-    const pixelInputs = document.getElementById('pixelInputs');
-    const scaleInput = document.getElementById('scaleInput');
-    const dpiInputs = document.getElementById('dpiInputs');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
-    const applyBtn = document.getElementById('apply');
-    const downloadBtn = document.getElementById('download');
-    const info = document.getElementById('info');
-    const previewSize = document.getElementById('previewSize');
-    let img = new Image();
+    const resizeMode = document.getElementById('resizeMode');
 
-    mode.addEventListener('change', () => {
-      pixelInputs.style.display = mode.value === 'pixels' ? 'block' : 'none';
-      scaleInput.style.display = mode.value === 'scale' ? 'block' : 'none';
-      dpiInputs.style.display = mode.value === 'dpi' ? 'block' : 'none';
+    resizeMode.addEventListener('change', () => {
+      document.getElementById('scaleBox').style.display = resizeMode.value === 'scale' ? 'block' : 'none';
+      document.getElementById('pixelBox').style.display = resizeMode.value === 'pixels' ? 'block' : 'none';
+      document.getElementById('dpiBox').style.display = resizeMode.value === 'dpi' ? 'block' : 'none';
     });
 
+    let img = new Image();
     upload.addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = ev => {
-        img.onload = () => {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-        };
-        img.src = ev.target.result;
-      };
+      reader.onload = evt => { img.src = evt.target.result; };
       reader.readAsDataURL(file);
     });
 
-    function estimateSize(format, quality = 0.92) {
-      let dataUrl = canvas.toDataURL(format, quality);
-      return Math.round((dataUrl.length * (3/4)) / 1024);
+    async function compressToMaxSize(canvas, format, maxKB) {
+      let quality = 0.92;
+      let step = 0.05;
+      let blob = await new Promise(r => canvas.toBlob(r, format, quality));
+
+      while (blob.size / 1024 > maxKB && quality > 0.2) {
+        quality -= step;
+        blob = await new Promise(r => canvas.toBlob(r, format, quality));
+      }
+      return blob;
     }
 
-    applyBtn.addEventListener('click', () => {
+    async function processImage() {
       if (!img.src) return;
-      let newW = img.width, newH = img.height;
-      if (mode.value === 'pixels') {
-        newW = parseInt(document.getElementById('width').value) || img.width;
-        newH = parseInt(document.getElementById('height').value) || img.height;
-      } else if (mode.value === 'scale') {
-        const scale = (parseInt(document.getElementById('scale').value) || 100) / 100;
-        newW = img.width * scale;
-        newH = img.height * scale;
-      } else if (mode.value === 'dpi') {
-        const cmToInch = 0.393701;
-        const wcm = parseFloat(document.getElementById('printWidth').value) || img.width/100;
-        const hcm = parseFloat(document.getElementById('printHeight').value) || img.height/100;
-        const dpi = parseInt(document.getElementById('dpi').value) || 300;
-        newW = wcm * cmToInch * dpi;
-        newH = hcm * cmToInch * dpi;
+
+      let newWidth, newHeight;
+      if (resizeMode.value === 'scale') {
+        const scale = document.getElementById('scale').value / 100;
+        newWidth = img.width * scale;
+        newHeight = img.height * scale;
+      } else if (resizeMode.value === 'pixels') {
+        newWidth = document.getElementById('width').value || img.width;
+        newHeight = document.getElementById('height').value || img.height;
+      } else if (resizeMode.value === 'dpi') {
+        const cmWidth = document.getElementById('cmWidth').value;
+        const cmHeight = document.getElementById('cmHeight').value;
+        const dpi = document.getElementById('dpi').value;
+        newWidth = cmWidth * dpi / 2.54;
+        newHeight = cmHeight * dpi / 2.54;
       }
 
-      canvas.width = newW;
-      canvas.height = newH;
-      ctx.drawImage(img, 0, 0, newW, newH);
-      downloadBtn.style.display = 'block';
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
 
-      const format = document.getElementById('format').value;
-      const estSize = estimateSize(format);
-      previewSize.textContent = `Estimated file size: ${estSize} KB`;
-      previewSize.className = "success";
-      info.textContent = "Preview ready. Click Download.";
-      info.className = "";
-    });
-
-    downloadBtn.addEventListener('click', () => {
       const format = document.getElementById('format').value;
       const maxKB = parseInt(document.getElementById('maxSize').value);
-      let quality = 0.92;
-      let dataUrl = canvas.toDataURL(format, quality);
-      let sizeKB = Math.round((dataUrl.length * (3/4)) / 1024);
 
-      if (maxKB && (format === 'image/jpeg' || format === 'image/webp')) {
-        while (sizeKB > maxKB && quality > 0.1) {
-          quality -= 0.05;
-          dataUrl = canvas.toDataURL(format, quality);
-          sizeKB = Math.round((dataUrl.length * (3/4)) / 1024);
-        }
-      }
+      const blob = await compressToMaxSize(canvas, format, maxKB);
 
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = 'resized.' + format.split('/')[1];
-      a.click();
+      const url = URL.createObjectURL(blob);
+      const download = document.getElementById('download');
+      download.href = url;
+      download.download = `resized.${format.split('/')[1]}`;
+      download.style.display = 'block';
 
-      if (maxKB && sizeKB > maxKB) {
-        info.innerHTML = `Final size: ${sizeKB} KB (⚠ Could not reduce below ${maxKB} KB)`;
-        info.className = "error";
+      const resultInfo = document.getElementById('resultInfo');
+      const sizeKB = (blob.size / 1024).toFixed(2);
+      if (sizeKB > maxKB) {
+        resultInfo.innerHTML = `<span class='warning'>⚠ Final size: ${sizeKB} KB (exceeds max ${maxKB} KB)</span>`;
       } else {
-        info.textContent = `Final size: ${sizeKB} KB`;
-        info.className = "success";
+        resultInfo.innerHTML = `✅ Final size: ${sizeKB} KB (within limit)`;
       }
-    });
+    }
   </script></body>
 </html>
