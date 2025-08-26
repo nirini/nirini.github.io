@@ -1,20 +1,71 @@
 <!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>NiRiNi Computer Academy</title>
-    <link rel="stylesheet" href="css\body.css">
-    <link rel="stylesheet" href="css\poster.css">
-    <link rel="stylesheet" href="css\notes.css">
-    <link rel="stylesheet" href="css\notice.css">
-    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Home Page</title>
+    <!-- Load Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Apply the Inter font to all elements */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
 </head>
-<body>
-<poster><img src="img\nirini.png"></poster>
-<div id="notes"><a href="Objective/normilazation-in-dbms.html">normalization in DBMS</a></div>
-<div id="notes"><a href="Objective/Symbols-cpp.html">Symbols in c++</a></div>
-<div id="notes"><a href="Objective/Science-Class-9-set-1.html">Science Class 9 Set 1</a></div>
-    <div id="notice">
-    <marquee behavior="alternate"><span id="notice-text">| DCA | WEBSite Design | Python |</span></marquee>
-    </div>
+<body class="bg-slate-950 text-slate-200 antialiased p-4 sm:p-8">
 
+    <!-- Main container for the content, centered and with responsive width -->
+    <main class="max-w-4xl mx-auto py-8 md:py-16">
+
+        <!-- Main heading for the home page -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4">
+                Welcome to Our Service
+            </h1>
+            <p class="text-lg text-slate-400 max-w-2xl mx-auto">
+                Discover a new way to streamline your workflow and boost your creativity.
+            </p>
+        </header>
+
+        <!-- Container for the feature sections -->
+        <div class="space-y-8">
+
+            <!-- First feature section -->
+            <section class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-900/50 transition-transform duration-300 hover:scale-[1.01]">
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
+                    Effortless Management
+                </h2>
+                <p class="text-slate-400 leading-relaxed">
+                    Our platform simplifies complex tasks, allowing you to manage your projects, teams, and data with unparalleled ease. Focus on what matters most while we handle the rest.
+                </p>
+            </section>
+
+            <!-- Second feature section -->
+            <section class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-900/50 transition-transform duration-300 hover:scale-[1.01]">
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
+                    Creative Freedom
+                </h2>
+                <p class="text-slate-400 leading-relaxed">
+                    Unleash your potential with our powerful suite of tools. From intuitive design interfaces to collaborative workspaces, our platform is built to support your creative vision.
+                </p>
+            </section>
+
+            <!-- Third feature section -->
+            <section class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-900/50 transition-transform duration-300 hover:scale-[1.01]">
+                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
+                    Seamless Collaboration
+                </h2>
+                <p class="text-slate-400 leading-relaxed">
+                    Work together in real time, no matter where you are. Our integrated collaboration features ensure your team stays connected, productive, and on the same page.
+                </p>
+            </section>
+
+        </div>
+    </main>
 </body>
 </html>
