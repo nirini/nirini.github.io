@@ -175,15 +175,26 @@
 
     // Function to compress the image blob to the target size
     async function compressToMaxSize(canvas, outputFormat, maxKB) {
-      let quality = 0.92;
+      let quality = 0.95; // Start with a slightly higher quality
       let step = 0.05;
+      let previousBlob = null;
       let blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
 
-      // Loop to reduce quality until size is within limit or quality is too low
+      const minKB = maxKB - 5;
+      
+      // Loop to iteratively reduce quality until the file size is within the target range
       while (blob.size / 1024 > maxKB && quality > 0.1) {
+        previousBlob = blob; // Store the blob from the previous step
         quality -= step;
         blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
       }
+
+      // After the loop, if the size is now too small (below the minimum),
+      // we'll return the previous blob which was closer to the max size
+      if (blob.size / 1024 < minKB && previousBlob) {
+        return previousBlob;
+      }
+      
       return blob;
     }
 
