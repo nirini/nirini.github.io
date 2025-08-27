@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Image Resizer & Converter</title>
+  <!-- Load Tailwind CSS from CDN for modern, responsive styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Use Inter font for a clean, modern look -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      /* Custom background pattern for a richer feel */
+      background: #f0f4f8;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center p-4 min-h-screen">
+  <!-- Main container card with padding, rounded corners, and shadow -->
+  <div class="container bg-white p-6 md:p-10 rounded-3xl shadow-2xl w-full max-w-2xl border border-gray-200">
+    <h1 class="text-3xl md:text-4xl font-extrabold text-center text-gray-800 mb-6">Image Resizer & Converter</h1>
+
+    <!-- File upload section -->
+    <div class="mb-6">
+      <label for="upload" class="block text-gray-700 font-semibold mb-2">Upload Image</label>
+      <input type="file" id="upload" accept="image/*" class="w-full text-gray-700 border-gray-300 rounded-xl cursor-pointer file:rounded-xl file:border-0 file:py-2 file:px-4 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+    </div>
+    
+    <!-- Controls section grouped in a responsive grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <!-- Resize Mode dropdown -->
+      <div>
+        <label for="resizeMode" class="block text-gray-700 font-semibold mb-2">Resize Mode</label>
+        <select id="resizeMode" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+          <option value="scale">Scale (%)</option>
+          <option value="pixels">Dimensions (px)</option>
+          <option value="dpi">Physical Size + DPI</option>
+        </select>
+      </div>
+      <!-- Output Format dropdown -->
+      <div>
+        <label for="format" class="block text-gray-700 font-semibold mb-2">Output Format</label>
+        <select id="format" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+          <option value="image/jpeg">JPEG</option>
+          <option value="image/png">PNG</option>
+          <option value="image/webp">WEBP</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Dynamic input boxes for different resize modes -->
+    <div id="dynamicInputs" class="space-y-4 mb-6">
+      <!-- Scale input -->
+      <div id="scaleBox">
+        <label for="scale" class="block text-gray-700 font-semibold mb-2">Scale (%)</label>
+        <input type="number" id="scale" value="100" min="1" max="500" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+      </div>
+      <!-- Pixel input (initially hidden) -->
+      <div id="pixelBox" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="width" class="block text-gray-700 font-semibold mb-2">Width (px)</label>
+          <input type="number" id="width" min="1" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+        </div>
+        <div>
+          <label for="height" class="block text-gray-700 font-semibold mb-2">Height (px)</label>
+          <input type="number" id="height" min="1" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+        </div>
+      </div>
+      <!-- DPI input (initially hidden) -->
+      <div id="dpiBox" class="hidden grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="cmWidth" class="block text-gray-700 font-semibold mb-2">Width (cm)</label>
+          <input type="number" id="cmWidth" min="0.1" step="0.1" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+        </div>
+        <div>
+          <label for="cmHeight" class="block text-gray-700 font-semibold mb-2">Height (cm)</label>
+          <input type="number" id="cmHeight" min="0.1" step="0.1" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+        </div>
+        <div>
+          <label for="dpi" class="block text-gray-700 font-semibold mb-2">DPI</label>
+          <input type="number" id="dpi" value="300" min="1" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+        </div>
+      </div>
+    </div>
+    
+    <!-- Max file size input -->
+    <div class="mb-6">
+      <label for="maxSize" class="block text-gray-700 font-semibold mb-2">Max File Size (KB)</label>
+      <input type="number" id="maxSize" value="300" min="1" class="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200">
+    </div>
+
+    <!-- Buttons section -->
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+      <button onclick="processImage()" id="processBtn" class="w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-blue-700 active:bg-blue-800 transition transform hover:scale-105 duration-200">
+        Apply & Preview
+      </button>
+      <a id="download" class="hidden w-full">
+        <button class="w-full bg-green-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:bg-green-700 active:bg-green-800 transition transform hover:scale-105 duration-200">
+          Download Image
+        </button>
+      </a>
+    </div>
+
+    <!-- Result information and preview canvas -->
+    <div class="info text-center mt-4 mb-6" id="resultInfo"></div>
+    <div class="bg-gray-200 rounded-xl border-4 border-dashed border-gray-300 p-2 overflow-hidden">
+      <canvas id="canvas" class="rounded-lg shadow-inner"></canvas>
+    </div>
+    
+  </div>
+
+  <script>
+    // Constants for DOM elements
+    const upload = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const resizeMode = document.getElementById('resizeMode');
+    const scaleBox = document.getElementById('scaleBox');
+    const pixelBox = document.getElementById('pixelBox');
+    const dpiBox = document.getElementById('dpiBox');
+    const format = document.getElementById('format');
+    const maxSize = document.getElementById('maxSize');
+    const processBtn = document.getElementById('processBtn');
+    const downloadLink = document.getElementById('download');
+    const resultInfo = document.getElementById('resultInfo');
+
+    let img = new Image();
+    let originalFileName = '';
+
+    // Event listener to show/hide input boxes based on resize mode
+    resizeMode.addEventListener('change', () => {
+      scaleBox.classList.add('hidden');
+      pixelBox.classList.add('hidden');
+      dpiBox.classList.add('hidden');
+      
+      if (resizeMode.value === 'scale') {
+        scaleBox.classList.remove('hidden');
+      } else if (resizeMode.value === 'pixels') {
+        pixelBox.classList.remove('hidden');
+      } else if (resizeMode.value === 'dpi') {
+        dpiBox.classList.remove('hidden');
+      }
+    });
+
+    // Event listener for file upload
+    upload.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file || !file.type.startsWith('image/')) {
+        resultInfo.innerHTML = '<span class="text-red-500 font-semibold">Please upload a valid image file.</span>';
+        downloadLink.classList.add('hidden');
+        return;
+      }
+
+      originalFileName = file.name;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        img.onload = () => {
+          // Set initial canvas size to match the original image
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          resultInfo.innerHTML = `<span class="text-gray-600">Original dimensions: ${img.width}x${img.height} px</span>`;
+          downloadLink.classList.add('hidden'); // Hide download link on new upload
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Function to compress the image blob to the target size
+    async function compressToMaxSize(canvas, outputFormat, maxKB) {
+      let quality = 0.92;
+      let step = 0.05;
+      let blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
+
+      // Loop to reduce quality until size is within limit or quality is too low
+      while (blob.size / 1024 > maxKB && quality > 0.1) {
+        quality -= step;
+        blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
+      }
+      return blob;
+    }
+
+    // Main function to process the image
+    async function processImage() {
+      if (!img.src) {
+        resultInfo.innerHTML = '<span class="text-red-500 font-semibold">Please upload an image first.</span>';
+        return;
+      }
+      
+      // Show loading state
+      processBtn.disabled = true;
+      processBtn.innerHTML = 'Processing...';
+      resultInfo.innerHTML = '<span class="text-blue-500">Resizing and converting...</span>';
+
+      let newWidth, newHeight;
+      const cmToInch = 2.54;
+
+      // Calculate new dimensions based on selected mode
+      if (resizeMode.value === 'scale') {
+        const scaleValue = document.getElementById('scale').value || 100;
+        const scale = scaleValue / 100;
+        newWidth = Math.round(img.width * scale);
+        newHeight = Math.round(img.height * scale);
+      } else if (resizeMode.value === 'pixels') {
+        newWidth = document.getElementById('width').value || img.width;
+        newHeight = document.getElementById('height').value || img.height;
+      } else if (resizeMode.value === 'dpi') {
+        const cmWidth = document.getElementById('cmWidth').value;
+        const cmHeight = document.getElementById('cmHeight').value;
+        const dpi = document.getElementById('dpi').value || 300;
+        if (!cmWidth || !cmHeight) {
+          resultInfo.innerHTML = '<span class="text-red-500 font-semibold">Please enter both width and height for DPI mode.</span>';
+          processBtn.disabled = false;
+          processBtn.innerHTML = 'Apply & Preview';
+          return;
+        }
+        newWidth = Math.round(cmWidth * dpi / cmToInch);
+        newHeight = Math.round(cmHeight * dpi / cmToInch);
+      }
+      
+      // Validate dimensions
+      if (newWidth <= 0 || newHeight <= 0) {
+        resultInfo.innerHTML = '<span class="text-red-500 font-semibold">Dimensions must be greater than zero.</span>';
+        processBtn.disabled = false;
+        processBtn.innerHTML = 'Apply & Preview';
+        return;
+      }
+
+      // Set canvas size and draw the resized image
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+      const outputFormat = format.value;
+      const maxKB = parseInt(maxSize.value) || 300;
+      
+      // Get the compressed image blob
+      const blob = await compressToMaxSize(canvas, outputFormat, maxKB);
+      const url = URL.createObjectURL(blob);
+      
+      // Update download link and button
+      downloadLink.href = url;
+      const fileExtension = outputFormat.split('/')[1];
+      const fileName = originalFileName.substring(0, originalFileName.lastIndexOf('.')) || originalFileName;
+      downloadLink.download = `${fileName}_resized_${newWidth}x${newHeight}.${fileExtension}`;
+      downloadLink.classList.remove('hidden');
+
+      // Update info text
+      const sizeKB = (blob.size / 1024).toFixed(2);
+      if (sizeKB > maxKB) {
+        resultInfo.innerHTML = `<span class="text-red-500 font-semibold">⚠ Final size: ${sizeKB} KB (exceeds max ${maxKB} KB)</span>`;
+      } else {
+        resultInfo.innerHTML = `<span class="text-green-600 font-semibold">✅ Final size: ${sizeKB} KB (within limit)</span>`;
+      }
+      
+      // Reset button state
+      processBtn.disabled = false;
+      processBtn.innerHTML = 'Apply & Preview';
+    }
+  </script>
+</body>
+</html>
