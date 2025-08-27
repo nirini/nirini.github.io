@@ -272,25 +272,36 @@
 
     // Function to compress the image blob to the target size range
     async function compressToMaxSize(canvas, outputFormat, maxKB) {
-      const minKB = Math.max(0, maxKB - 10);
-      let quality = 0.95; 
-      let step = 0.05;
-
-      // First, reduce quality until the file size is at or below the max size
-      let blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
-      while (blob.size / 1024 > maxKB && quality > 0.1) {
-        quality -= step;
-        blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
-      }
-
-      // Second, increase quality if the size is now too small, to fit the desired range
-      if (outputFormat !== 'image/png') { // PNG does not support quality setting, so skip this step
-        while (blob.size / 1024 < minKB && quality < 1.0) {
-          quality += step;
-          blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
-        }
+      if (outputFormat === 'image/png') {
+        // PNG doesn't support quality, so we can't force a size
+        return new Promise(r => canvas.toBlob(r, outputFormat));
       }
       
+      const minKB = Math.max(0, maxKB - 10);
+      let quality = 0.1; // Start with a very low quality
+      let blob = null;
+      let lastBlob = null;
+      
+      // Iteratively increase quality with small steps to find the optimal size
+      while (quality <= 1.0) {
+        blob = await new Promise(r => canvas.toBlob(r, outputFormat, quality));
+        const sizeKB = blob.size / 1024;
+
+        if (sizeKB > maxKB) {
+          // If we've overshot the max size, return the previous blob
+          return lastBlob || blob;
+        }
+
+        if (sizeKB >= minKB) {
+          // If we're within the desired range, return this blob
+          return blob;
+        }
+        
+        lastBlob = blob;
+        quality += 0.01; // Tiny step for precision
+      }
+      
+      // Fallback if the loop completes (shouldn't happen)
       return blob;
     }
 
@@ -313,12 +324,8 @@
         let statusClass = 'text-green-400';
         let statusIcon = '✅';
 
-        if (sizeKB > maxKB) {
-          status = 'Exceeds Max Limit';
-          statusClass = 'text-red-400';
-          statusIcon = '⚠️';
-        } else if (sizeKB < minKB) {
-          status = 'Below Min Limit';
+        if (sizeKB > maxKB || sizeKB < minKB) {
+          status = 'Outside Target Range';
           statusClass = 'text-red-400';
           statusIcon = '⚠️';
         }
