@@ -125,7 +125,11 @@
       const url = URL.createObjectURL(blob);
       const download = document.getElementById('download');
       download.href = url;
-      download.download = `resized.${format.split('/')[1]}`;
+      const originalFile = upload.files[0];
+const originalFileName = originalFile.name;
+const newFileName = `NiRiNi-${originalFileName}`;
+download.download = newFileName;
+
       download.style.display = 'block';
 
       const resultInfo = document.getElementById('resultInfo');
