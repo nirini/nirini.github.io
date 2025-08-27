@@ -1,71 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Home Page</title>
-    <!-- Load Tailwind CSS from CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Load Inter font from Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* Apply the Inter font to all elements */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modern Home Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
 </head>
-<body class="bg-slate-950 text-slate-200 antialiased p-4 sm:p-8">
+<body class="bg-slate-950 text-slate-200 antialiased">
 
-    <!-- Main container for the content, centered and with responsive width -->
-    <main class="max-w-4xl mx-auto py-8 md:py-16">
+  <!-- Navbar -->
+  <nav class="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-lg border-b border-slate-800">
+    <div class="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
+      <h1 class="text-xl font-bold text-white">🚀 OurService</h1>
+      <ul class="hidden md:flex gap-6 text-slate-400">
+        <li><a href="#" class="hover:text-white transition">Home</a></li>
+        <li><a href="#features" class="hover:text-white transition">Features</a></li>
+        <li><a href="#contact" class="hover:text-white transition">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
 
-        <!-- Main heading for the home page -->
-        <header class="text-center mb-12">
-            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-4">
-                Welcome to Our Service
-            </h1>
-            <p class="text-lg text-slate-400 max-w-2xl mx-auto">
-                Discover a new way to streamline your workflow and boost your creativity.
-            </p>
-        </header>
+  <!-- Hero Section -->
+  <main class="max-w-4xl mx-auto px-6 py-16 text-center">
+    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6">
+      Welcome to Our Service
+    </h1>
+    <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-8">
+      Discover a new way to streamline your workflow and boost your creativity.
+    </p>
+    <a href="#features" class="inline-block px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium shadow-lg transition">
+      Get Started
+    </a>
+  </main>
 
-        <!-- Container for the feature sections -->
-        <div class="space-y-8">
+  <!-- Features -->
+  <section id="features" class="max-w-4xl mx-auto space-y-8 px-6 pb-16">
+    <div class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
+        <a href="01">🖼️ Smart Image Resizer & Converter</a>
+      </h2>
+      <p class="text-slate-400 leading-relaxed text-sm md:text-base text-justify">
+        Resize, compress, and convert images with precision. Adjust by pixels, percentage, or DPI, set max file size in KB, and preview before downloading.
+      </p>
+    </div>
 
-            <!-- First feature section -->
-            <section class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-900/50 transition-transform duration-300 hover:scale-[1.01]">
-                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
-                    <a href="01">Smart Image Resizer & Converter</a>
-                </h2>
-                <p class="text-slate-400 leading-relaxed">
-                    Smart Image Resizer & Converter is a free, easy-to-use online tool that lets you resize, compress, and convert your images with precision. You can adjust dimensions by pixels, percentage, or physical size with DPI, change the image format (JPEG, PNG, WEBP), and set a maximum file size in KB. The tool automatically optimizes images to meet your chosen size limit and shows a live preview with the estimated final size before downloading.
-                </p>
-            </section>
+    <div class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">🎨 Creative Freedom</h2>
+      <p class="text-slate-400 leading-relaxed text-sm md:text-base text-justify">
+        Unleash your potential with our design tools, collaborative workspaces, and intuitive interfaces that empower your creativity.
+      </p>
+    </div>
 
-            <!-- Second feature section -->
-            <section class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-900/50 transition-transform duration-300 hover:scale-[1.01]">
-                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
-                    Creative Freedom
-                </h2>
-                <p class="text-slate-400 leading-relaxed">
-                    Unleash your potential with our powerful suite of tools. From intuitive design interfaces to collaborative workspaces, our platform is built to support your creative vision.
-                </p>
-            </section>
+    <div class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+      <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">🤝 Seamless Collaboration</h2>
+      <p class="text-slate-400 leading-relaxed text-sm md:text-base text-justify">
+        Work together in real-time. Stay connected, productive, and aligned with integrated collaboration features.
+      </p>
+    </div>
+  </section>
 
-            <!-- Third feature section -->
-            <section class="bg-slate-900 rounded-2xl p-6 md:p-8 shadow-2xl shadow-slate-900/50 transition-transform duration-300 hover:scale-[1.01]">
-                <h2 class="text-2xl md:text-3xl font-bold text-white mb-2">
-                    Seamless Collaboration
-                </h2>
-                <p class="text-slate-400 leading-relaxed">
-                    Work together in real time, no matter where you are. Our integrated collaboration features ensure your team stays connected, productive, and on the same page.
-                </p>
-            </section>
+  <!-- Footer -->
+  <footer id="contact" class="border-t border-slate-800 py-6 text-center text-slate-500">
+    <p>© 2025 OurService. All rights reserved.</p>
+  </footer>
 
-        </div>
-    </main>
 </body>
 </html>
