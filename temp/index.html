@@ -318,10 +318,22 @@
       
       // Conditionally show DPI and physical size info
       if (resizeMode.value === 'dpi') {
-        const dpi = parseFloat(document.getElementById('dpi').value) || 300;
-        const finalDpi = (newWidth / (parseFloat(document.getElementById('cmWidth').value) / cmPerInch)).toFixed(2);
-        const finalCmWidth = (newWidth * cmPerInch / dpi).toFixed(2);
-        const finalCmHeight = (newHeight * cmPerInch / dpi).toFixed(2);
+        const cmWidth = parseFloat(document.getElementById('cmWidth').value);
+        const cmHeight = parseFloat(document.getElementById('cmHeight').value);
+        const dpi = parseFloat(document.getElementById('dpi').value);
+
+        let finalDpi = '';
+        if (cmWidth > 0 && dpi > 0) {
+            finalDpi = (newWidth / (cmWidth / cmPerInch)).toFixed(2);
+        } else if (cmHeight > 0 && dpi > 0) {
+            finalDpi = (newHeight / (cmHeight / cmPerInch)).toFixed(2);
+        } else {
+            finalDpi = 'N/A';
+        }
+
+        const finalCmWidth = (newWidth * cmPerInch / (dpi || 96)).toFixed(2); // Use a default DPI if none provided
+        const finalCmHeight = (newHeight * cmPerInch / (dpi || 96)).toFixed(2);
+        
         finalDpiInfoP.textContent = `Final DPI: ${finalDpi} | Physical Size: ${finalCmWidth}cm x ${finalCmHeight}cm`;
       } else {
         finalDpiInfoP.textContent = '';
