@@ -1,342 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Image Resizer & Converter</title>
-  <!-- Tailwind CSS CDN for modern, responsive styling -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF Size Resizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-      background-color: #e2e8f0;
-    }
-  </style>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
-  <div class="container bg-white rounded-xl shadow-2xl p-6 md:p-10 w-full max-w-xl transition-all duration-300">
-    <!-- Header -->
-    <h1 class="text-3xl md:text-4xl font-extrabold text-gray-800 text-center mb-6">
-      Image Resizer & Converter
-    </h1>
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-lg">
+    <h1 class="text-2xl font-bold text-center mb-4">📄 PDF Size Resizer</h1>
 
-    <!-- Upload Input -->
-    <div class="mb-6">
-      <label for="upload" class="block text-sm font-medium text-gray-700 mb-2">
-        Upload Image
-      </label>
-      <input type="file" id="upload" accept="image/*" class="w-full text-sm text-gray-500
-        file:mr-4 file:py-2 file:px-4
-        file:rounded-full file:border-0
-        file:text-sm file:font-semibold
-        file:bg-blue-50 file:text-blue-700
-        hover:file:bg-blue-100 cursor-pointer">
-    </div>
+    <input type="file" id="pdfFile" accept="application/pdf"
+           class="block w-full mb-4 border rounded-lg p-2">
 
-    <!-- Original Image Information (Hidden initially) -->
-    <div id="originalInfo" class="hidden mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-      <h2 class="text-xl font-semibold mb-2">Original Image Info</h2>
-      <p id="originalDimensions" class="text-gray-700"></p>
-      <p id="originalSize" class="text-gray-700"></p>
-    </div>
+    <label class="block mb-2 font-semibold">Desired Size (KB):</label>
+    <input type="number" id="desiredSize" placeholder="e.g. 500 (KB)"
+           class="w-full border p-2 rounded-lg mb-4">
 
-    <!-- Resize Mode Selector -->
-    <div class="mb-6">
-      <label for="resizeMode" class="block text-sm font-medium text-gray-700 mb-2">
-        Resize Mode
-      </label>
-      <select id="resizeMode" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm">
-        <option value="scale">Scale (%)</option>
-        <option value="pixels">Dimensions (px)</option>
-        <option value="dpi">Physical Size + DPI</option>
-      </select>
-    </div>
+    <button onclick="resizePDF()" 
+            class="bg-blue-600 text-white w-full p-3 rounded-xl font-semibold hover:bg-blue-700">
+      Resize & Download
+    </button>
 
-    <!-- Dynamic Input Boxes based on Resize Mode -->
-    <div id="modeInputs" class="space-y-4 mb-6">
-      <!-- Scale Input -->
-      <div id="scaleBox">
-        <label for="scale" class="block text-sm font-medium text-gray-700">
-          Scale (%)
-        </label>
-        <input type="number" id="scale" value="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-      </div>
-
-      <!-- Pixels Input -->
-      <div id="pixelBox" class="hidden">
-        <label for="width" class="block text-sm font-medium text-gray-700">
-          Max Dimensions (px)
-        </label>
-        <div class="flex space-x-4 mt-1">
-          <input type="number" id="width" placeholder="Max Width" class="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-          <input type="number" id="height" placeholder="Max Height" class="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-        </div>
-        <p class="text-xs text-gray-500 mt-1">
-          Enter a value for one or both. The image will be resized to fit within these dimensions while preserving its aspect ratio.
-        </p>
-      </div>
-
-      <!-- DPI Input -->
-      <div id="dpiBox" class="hidden">
-        <label for="cmWidth" class="block text-sm font-medium text-gray-700">
-          Max Physical Size (cm)
-        </label>
-        <div class="flex space-x-4 mt-1">
-          <input type="number" id="cmWidth" placeholder="Max Width" class="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-          <input type="number" id="cmHeight" placeholder="Max Height" class="block w-1/2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-        </div>
-        <label for="dpi" class="block text-sm font-medium text-gray-700 mt-4">
-          DPI (Dots Per Inch)
-        </label>
-        <input type="number" id="dpi" value="300" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-      </div>
-    </div>
-
-    <!-- Output Format & Max Size -->
-    <div class="flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0 mb-6">
-      <div class="flex-1">
-        <label for="format" class="block text-sm font-medium text-gray-700 mb-2">
-          Output Format
-        </label>
-        <select id="format" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm">
-          <option value="image/jpeg">JPEG</option>
-          <option value="image/png">PNG</option>
-          <option value="image/webp">WEBP</option>
-        </select>
-      </div>
-      <div class="flex-1">
-        <label for="maxSize" class="block text-sm font-medium text-gray-700 mb-2">
-          Max File Size (KB)
-        </label>
-        <input type="number" id="maxSize" value="300" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
-      </div>
-    </div>
-
-    <!-- Action Buttons & Info -->
-    <div class="flex justify-between items-center mb-6">
-      <button onclick="processImage()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-        Apply & Preview
-      </button>
-      <a id="download" class="hidden">
-        <button class="px-6 py-3 bg-green-600 text-white font-bold rounded-full shadow-lg hover:bg-green-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-          Download
-        </button>
-      </a>
-    </div>
-
-    <!-- Final Image Information & Canvas -->
-    <div id="finalInfo" class="hidden mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-      <h2 class="text-xl font-semibold mb-2">Processed Image Info</h2>
-      <p id="finalDimensions" class="text-gray-700"></p>
-      <p id="finalSize" class="text-gray-700"></p>
-      <p id="finalDpiInfo" class="text-gray-700"></p>
-      <p id="finalQualityInfo" class="text-gray-700"></p>
-    </div>
-    
-    <canvas id="canvas" class="w-full border border-gray-300 rounded-lg shadow-inner mt-6"></canvas>
+    <p id="status" class="mt-4 text-center text-gray-600"></p>
   </div>
 
   <script>
-    const upload = document.getElementById('upload');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const resizeMode = document.getElementById('resizeMode');
-    const scaleBox = document.getElementById('scaleBox');
-    const pixelBox = document.getElementById('pixelBox');
-    const dpiBox = document.getElementById('dpiBox');
-    const downloadLink = document.getElementById('download');
+    async function resizePDF() {
+      const fileInput = document.getElementById("pdfFile");
+      const desiredSizeKB = parseInt(document.getElementById("desiredSize").value);
+      const status = document.getElementById("status");
 
-    const originalInfoDiv = document.getElementById('originalInfo');
-    const originalDimensionsP = document.getElementById('originalDimensions');
-    const originalSizeP = document.getElementById('originalSize');
-
-    const finalInfoDiv = document.getElementById('finalInfo');
-    const finalDimensionsP = document.getElementById('finalDimensions');
-    const finalSizeP = document.getElementById('finalSize');
-    const finalDpiInfoP = document.getElementById('finalDpiInfo');
-    const finalQualityInfoP = document.getElementById('finalQualityInfo');
-
-    const cmPerInch = 2.54;
-
-    // Show/hide input boxes based on the selected resize mode
-    resizeMode.addEventListener('change', () => {
-      scaleBox.classList.toggle('hidden', resizeMode.value !== 'scale');
-      pixelBox.classList.toggle('hidden', resizeMode.value !== 'pixels');
-      dpiBox.classList.toggle('hidden', resizeMode.value !== 'dpi');
-    });
-
-    // Holds the original image data and file for size calculation
-    let originalImg = new Image();
-    let originalFile = null;
-
-    upload.addEventListener('change', e => {
-      originalFile = e.target.files[0];
-      if (!originalFile) return;
-
-      const reader = new FileReader();
-      reader.onload = evt => {
-        originalImg.src = evt.target.result;
-        // After loading, display original info. The `onload` event ensures we have dimensions.
-        originalImg.onload = () => displayOriginalInfo();
-      };
-      reader.readAsDataURL(originalFile);
-    });
-
-    /**
-     * Displays information about the original image.
-     */
-    function displayOriginalInfo() {
-      if (!originalImg.src || !originalFile) return;
-
-      originalInfoDiv.classList.remove('hidden');
-      originalDimensionsP.textContent = `Dimensions: ${originalImg.width}px x ${originalImg.height}px`;
-      originalSizeP.textContent = `File Size: ${(originalFile.size / 1024).toFixed(2)} KB`;
-    }
-
-    /**
-     * Resizes the image while maintaining its aspect ratio and ensuring
-     * it does not exceed the specified maximum dimensions.
-     * @param {number} maxWidth The maximum allowed width.
-     * @param {number} maxHeight The maximum allowed height.
-     * @returns {{width: number, height: number}} The calculated new dimensions.
-     */
-    function calculateNewDimensions(maxWidth, maxHeight) {
-      const aspectRatio = originalImg.width / originalImg.height;
-      let newWidth, newHeight;
-
-      // Check if the original image is already smaller than the max dimensions
-      if (originalImg.width <= maxWidth && originalImg.height <= maxHeight) {
-        newWidth = originalImg.width;
-        newHeight = originalImg.height;
-      } else {
-        // First, check if resizing by width is the limiting factor
-        if (originalImg.width / maxWidth > originalImg.height / maxHeight) {
-          newWidth = maxWidth;
-          newHeight = newWidth / aspectRatio;
-        } else {
-          // Otherwise, resizing by height is the limiting factor
-          newHeight = maxHeight;
-          newWidth = newHeight * aspectRatio;
-        }
-      }
-
-      return {
-        width: Math.round(newWidth),
-        height: Math.round(newHeight)
-      };
-    }
-
-    /**
-     * Compresses the canvas image to a target file size (in KB) by
-     * reducing quality.
-     * @param {HTMLCanvasElement} canvas The canvas element to compress.
-     * @param {string} format The output format (e.g., 'image/jpeg').
-     * @param {number} maxKB The maximum file size in kilobytes.
-     * @returns {Promise<{blob: Blob, quality: number}>} A promise that resolves with the compressed Blob and quality.
-     */
-    async function compressToMaxSize(canvas, format, maxKB) {
-      let quality = 0.92;
-      const step = 0.05;
-      let blob;
-
-      do {
-        blob = await new Promise(r => canvas.toBlob(r, format, quality));
-        if (blob.size / 1024 > maxKB) {
-          quality = Math.max(0, quality - step);
-        }
-      } while (blob.size / 1024 > maxKB && quality > 0);
-
-      return { blob, quality };
-    }
-
-    /**
-     * Processes the image based on user inputs and renders it to the canvas.
-     */
-    async function processImage() {
-      if (!originalImg.src) {
-        finalInfoDiv.classList.add('hidden');
+      if (!fileInput.files.length || !desiredSizeKB) {
+        status.textContent = "⚠️ Please upload a PDF and enter desired size!";
         return;
       }
 
-      let newWidth, newHeight;
-      const originalWidth = originalImg.width;
-      const originalHeight = originalImg.height;
+      const file = fileInput.files[0];
+      let arrayBuffer = await file.arrayBuffer();
+      let fileSizeKB = Math.round(arrayBuffer.byteLength / 1024);
 
-      // Get resize dimensions based on the selected mode
-      if (resizeMode.value === 'scale') {
-        const scale = parseFloat(document.getElementById('scale').value) / 100;
-        newWidth = originalWidth * scale;
-        newHeight = originalHeight * scale;
-      } else if (resizeMode.value === 'pixels') {
-        const maxWidth = parseFloat(document.getElementById('width').value) || originalWidth;
-        const maxHeight = parseFloat(document.getElementById('height').value) || originalHeight;
-        const dimensions = calculateNewDimensions(maxWidth, maxHeight);
-        newWidth = dimensions.width;
-        newHeight = dimensions.height;
-      } else if (resizeMode.value === 'dpi') {
-        const cmWidth = parseFloat(document.getElementById('cmWidth').value);
-        const cmHeight = parseFloat(document.getElementById('cmHeight').value);
-        const dpi = parseFloat(document.getElementById('dpi').value);
+      status.textContent = `Original Size: ${fileSizeKB} KB ⏳ Processing...`;
 
-        let maxWidthPixels = originalWidth;
-        let maxHeightPixels = originalHeight;
-        if (cmWidth && dpi) maxWidthPixels = cmWidth * dpi / cmPerInch;
-        if (cmHeight && dpi) maxHeightPixels = cmHeight * dpi / cmPerInch;
-        
-        const dimensions = calculateNewDimensions(maxWidthPixels, maxHeightPixels);
-        newWidth = dimensions.width;
-        newHeight = dimensions.height;
-      }
-      
-      // Set canvas size and draw the new image
-      canvas.width = newWidth;
-      canvas.height = newHeight;
-      ctx.drawImage(originalImg, 0, 0, newWidth, newHeight);
+      let outputBytes = arrayBuffer;
+      let newSizeKB = fileSizeKB;
 
-      // Get output format and max size
-      const format = document.getElementById('format').value;
-      const maxKB = parseInt(document.getElementById('maxSize').value);
+      // CASE 1: Compress if too big
+      if (fileSizeKB > desiredSizeKB) {
+        let scale = 1.0;
+        while (newSizeKB > desiredSizeKB) {
+          scale *= 0.9; // shrink by 10%
 
-      // Compress and get the final blob
-      const { blob, quality } = await compressToMaxSize(canvas, format, maxKB);
+          const pdfDoc = await PDFLib.PDFDocument.load(outputBytes);
+          const pages = pdfDoc.getPages();
+          pages.forEach(page => {
+            const { width, height } = page.getSize();
+            page.setSize(width * 0.9, height * 0.9);
+          });
 
-      // Create a URL for the compressed image and set the download link
-      const url = URL.createObjectURL(blob);
-      downloadLink.href = url;
-      const originalFileName = originalFile.name;
-      const newFileName = `resized-${originalFileName.replace(/\.[^/.]+$/, "")}.${format.split('/')[1]}`;
-      downloadLink.download = newFileName;
-      downloadLink.classList.remove('hidden');
+          outputBytes = await pdfDoc.save();
+          newSizeKB = Math.round(outputBytes.byteLength / 1024);
 
-      // Update and show final information
-      finalInfoDiv.classList.remove('hidden');
-      const sizeKB = (blob.size / 1024).toFixed(2);
-      finalDimensionsP.textContent = `Dimensions: ${newWidth}px x ${newHeight}px`;
-      finalSizeP.textContent = `Final File Size: ${sizeKB} KB`;
-      finalQualityInfoP.textContent = `Compression Quality: ${(quality * 100).toFixed(0)}%`;
-      
-      // Conditionally show DPI and physical size info
-      if (resizeMode.value === 'dpi') {
-        const cmWidth = parseFloat(document.getElementById('cmWidth').value);
-        const cmHeight = parseFloat(document.getElementById('cmHeight').value);
-        const dpi = parseFloat(document.getElementById('dpi').value);
-
-        let finalDpi = '';
-        if (cmWidth > 0 && dpi > 0) {
-            finalDpi = (newWidth / (cmWidth / cmPerInch)).toFixed(2);
-        } else if (cmHeight > 0 && dpi > 0) {
-            finalDpi = (newHeight / (cmHeight / cmPerInch)).toFixed(2);
-        } else {
-            finalDpi = 'N/A';
+          if (newSizeKB < 20) break; // safety
         }
+      }
 
-        const finalCmWidth = (newWidth * cmPerInch / (dpi || 96)).toFixed(2); // Use a default DPI if none provided
-        const finalCmHeight = (newHeight * cmPerInch / (dpi || 96)).toFixed(2);
-        
-        finalDpiInfoP.textContent = `Final DPI: ${finalDpi} | Physical Size: ${finalCmWidth}cm x ${finalCmHeight}cm`;
+      // CASE 2: Expand if too small
+      else if (fileSizeKB < desiredSizeKB - 20) {
+        let scale = 1.0;
+        while (newSizeKB < desiredSizeKB - 20) {
+          scale *= 1.1; // enlarge by 10%
+
+          const pdfDoc = await PDFLib.PDFDocument.load(outputBytes);
+          const pages = pdfDoc.getPages();
+          pages.forEach(page => {
+            const { width, height } = page.getSize();
+            page.setSize(width * 1.1, height * 1.1);
+          });
+
+          outputBytes = await pdfDoc.save();
+          newSizeKB = Math.round(outputBytes.byteLength / 1024);
+
+          if (newSizeKB > desiredSizeKB) {
+            // If overshoot, revert last change
+            newSizeKB = Math.round(outputBytes.byteLength / 1024);
+            break;
+          }
+        }
+      }
+
+      // Download final PDF
+      if (newSizeKB <= desiredSizeKB) {
+        const blob = new Blob([outputBytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "resized.pdf";
+        a.click();
+
+        status.textContent = `✅ Success! Output size: ${newSizeKB} KB (<= ${desiredSizeKB} KB)`;
       } else {
-        finalDpiInfoP.textContent = '';
+        status.textContent = `⚠️ Could not resize correctly. Final size: ${newSizeKB} KB`;
       }
     }
   </script>
