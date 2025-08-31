@@ -1,110 +1,130 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>PDF Size Resizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/pdfjs-dist/build/pdf.min.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center font-sans">
+  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-2xl">
+    <h1 class="text-3xl font-bold text-center mb-4">📄 PDF Size Resizer</h1>
 
-  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-lg">
-    <h1 class="text-2xl font-bold text-center mb-4">📄 PDF Size Resizer</h1>
+    <div class="mb-4">
+      <label class="block text-sm font-semibold mb-2">Choose PDF</label>
+      <input id="pdfFile" type="file" accept="application/pdf" class="w-full" />
+    </div>
 
-    <input type="file" id="pdfFile" accept="application/pdf"
-           class="block w-full mb-4 border rounded-lg p-2">
+    <div class="mb-4">
+      <label class="block text-sm font-semibold mb-2">Desired size (KB)</label>
+      <input id="desiredSize" type="number" min="1" placeholder="e.g. 500" class="w-full p-2 border rounded" />
+    </div>
 
-    <label class="block mb-2 font-semibold">Desired Size (KB):</label>
-    <input type="number" id="desiredSize" placeholder="e.g. 500 (KB)"
-           class="w-full border p-2 rounded-lg mb-4">
-
-    <button onclick="resizePDF()" 
-            class="bg-blue-600 text-white w-full p-3 rounded-xl font-semibold hover:bg-blue-700">
-      Resize & Download
+    <button id="resizeBtn" class="bg-blue-600 text-white w-full p-3 rounded-xl font-semibold hover:bg-blue-700">
+      Resize PDF
     </button>
 
-    <p id="status" class="mt-4 text-center text-gray-600"></p>
+    <button id="downloadBtn" class="hidden bg-green-600 text-white w-full p-3 mt-3 rounded-xl font-semibold hover:bg-green-700">
+      Download PDF
+    </button>
+
+    <div id="statusContainer" class="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
+      <p id="status" class="text-sm text-gray-700"></p>
+    </div>
   </div>
 
   <script>
-    async function resizePDF() {
-      const fileInput = document.getElementById("pdfFile");
-      const desiredSizeKB = parseInt(document.getElementById("desiredSize").value);
-      const status = document.getElementById("status");
+    const resizeBtn = document.getElementById('resizeBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const status = document.getElementById('status');
+    let finalBlobUrl = null;
 
-      if (!fileInput.files.length || !desiredSizeKB) {
-        status.textContent = "⚠️ Please upload a PDF and enter desired size!";
+    resizeBtn.addEventListener('click', processPDF);
+    downloadBtn.addEventListener('click', () => {
+      if (finalBlobUrl) {
+        const a = document.createElement("a");
+        a.href = finalBlobUrl;
+        a.download = "resized.pdf";
+        a.click();
+        URL.revokeObjectURL(finalBlobUrl); // cleanup after download
+      }
+    });
+
+    async function processPDF() {
+      const fileInput = document.getElementById("pdfFile");
+      const desiredSizeKB = parseInt(document.getElementById("desiredSize").value, 10);
+
+      if (!fileInput.files.length || !desiredSizeKB || isNaN(desiredSizeKB) || desiredSizeKB <= 0) {
+        status.textContent = "⚠️ Upload a PDF and enter a valid target size.";
         return;
       }
 
       const file = fileInput.files[0];
-      let arrayBuffer = await file.arrayBuffer();
-      let fileSizeKB = Math.round(arrayBuffer.byteLength / 1024);
+      status.textContent = "⏳ Loading PDF...";
+      const arrayBuffer = await file.arrayBuffer();
+      const origKB = Math.round(arrayBuffer.byteLength / 1024);
 
-      status.textContent = `Original Size: ${fileSizeKB} KB ⏳ Processing...`;
-
-      let outputBytes = arrayBuffer;
-      let newSizeKB = fileSizeKB;
-
-      // CASE 1: Compress if too big
-      if (fileSizeKB > desiredSizeKB) {
-        let scale = 1.0;
-        while (newSizeKB > desiredSizeKB) {
-          scale *= 0.9; // shrink by 10%
-
-          const pdfDoc = await PDFLib.PDFDocument.load(outputBytes);
-          const pages = pdfDoc.getPages();
-          pages.forEach(page => {
-            const { width, height } = page.getSize();
-            page.setSize(width * 0.9, height * 0.9);
-          });
-
-          outputBytes = await pdfDoc.save();
-          newSizeKB = Math.round(outputBytes.byteLength / 1024);
-
-          if (newSizeKB < 20) break; // safety
-        }
+      // If already smaller, just use original
+      if (origKB <= desiredSizeKB) {
+        const blobOut = new Blob([arrayBuffer], { type: "application/pdf" });
+        finalBlobUrl = URL.createObjectURL(blobOut);
+        resizeBtn.classList.add("hidden");
+        downloadBtn.classList.remove("hidden");
+        status.innerHTML = `✅ Already small enough<br>Original: <b>${origKB} KB</b> → Final: <b>${origKB} KB</b>`;
+        return;
       }
 
-      // CASE 2: Expand if too small
-      else if (fileSizeKB < desiredSizeKB - 20) {
-        let scale = 1.0;
-        while (newSizeKB < desiredSizeKB - 20) {
-          scale *= 1.1; // enlarge by 10%
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-          const pdfDoc = await PDFLib.PDFDocument.load(outputBytes);
-          const pages = pdfDoc.getPages();
-          pages.forEach(page => {
-            const { width, height } = page.getSize();
-            page.setSize(width * 1.1, height * 1.1);
-          });
+      // Compression loop parameters
+      let scale = 1.0;
+      let quality = 0.85;
+      let outputBytes = arrayBuffer;
+      let newKB = origKB;
 
-          outputBytes = await pdfDoc.save();
-          newSizeKB = Math.round(outputBytes.byteLength / 1024);
+      while ((newKB >= origKB || newKB > desiredSizeKB) && scale > 0.2) {
+        const tempPdf = await PDFLib.PDFDocument.create();
 
-          if (newSizeKB > desiredSizeKB) {
-            // If overshoot, revert last change
-            newSizeKB = Math.round(outputBytes.byteLength / 1024);
-            break;
+        for (let p = 1; p <= pdf.numPages; p++) {
+          const page = await pdf.getPage(p);
+          const viewport = page.getViewport({ scale });
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          await page.render({ canvasContext: ctx, viewport }).promise;
+
+          const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", quality));
+          const buf = await blob.arrayBuffer();
+          const img = await tempPdf.embedJpg(buf);
+          const pageNew = tempPdf.addPage([img.width, img.height]);
+          pageNew.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+        }
+
+        outputBytes = await tempPdf.save();
+        newKB = Math.round(outputBytes.byteLength / 1024);
+
+        // Lower quality first, then scale
+        if (newKB >= origKB || newKB > desiredSizeKB) {
+          if (quality > 0.4) {
+            quality -= 0.1;
+          } else {
+            scale -= 0.1;
           }
         }
       }
 
-      // Download final PDF
-      if (newSizeKB <= desiredSizeKB) {
-        const blob = new Blob([outputBytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
+      const blobOut = new Blob([outputBytes], { type: "application/pdf" });
+      finalBlobUrl = URL.createObjectURL(blobOut);
 
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "resized.pdf";
-        a.click();
+      resizeBtn.classList.add("hidden");
+      downloadBtn.classList.remove("hidden");
 
-        status.textContent = `✅ Success! Output size: ${newSizeKB} KB (<= ${desiredSizeKB} KB)`;
-      } else {
-        status.textContent = `⚠️ Could not resize correctly. Final size: ${newSizeKB} KB`;
-      }
+      status.innerHTML = `✅ Compression successful<br>Original: <b>${origKB} KB</b> → Final: <b>${newKB} KB</b>`;
     }
   </script>
 </body>
