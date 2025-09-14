@@ -1,0 +1,97 @@
+<!doctype html>
+
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>बारहखड़ी Quiz (Kruti Dev)</title>
+  <style>
+    body{margin:0;padding:20px;font-family:Arial, sans-serif;background:#101826;color:#eee}
+    h1{font-size:1.4rem;margin-bottom:16px}
+    .card{background:#1c2433;padding:16px;border-radius:8px;margin-bottom:18px}
+    input{width:100%;padding:10px;font-size:1rem;border-radius:6px;border:none;margin-top:10px}
+    button{margin-top:12px;padding:10px 14px;font-size:1rem;border:none;border-radius:6px;cursor:pointer;background:#6ee7b7;color:#022}
+    .result{margin-top:12px;font-size:1.1rem}
+  </style>
+</head>
+<body>
+  <h1>बारहखड़ी Typing Practice (Random Quiz)</h1>
+  <div class="card">
+    <div id="questionBox">Question will appear here</div>
+    <input id="answer" placeholder="Type Kruti Dev keys here" />
+    <button id="submit">Submit</button>
+    <div class="result" id="result"></div>
+  </div>
+  <div class="card">
+    <div><strong>Progress:</strong> <span id="progress">0</span>/<span id="total"></span></div>
+  </div><script>
+// consonant mapping (Kruti Dev keys)
+const consonantMap = {
+  'क':'d','ख':'[k','ग':'x','घ':'?k','च':'p','छ':'N','ज':'t','झ':'>','ट':'V','ठ':'B','ड':'M','ढ':'<','ण':'.k','त':'r','थ':'F','द':'n','ध':'/k','न':'u','प':'i','फ':'Q','ब':'c','भ':'Hk','म':'e','य':';','र':'j','ल':'y','व':'o','श':'\'k','ष':'"k','स':'l','ह':'g','क्ष':'{k','त्र':'=','ज्ञ':'K'
+};
+
+// vowel matras mapping
+const matras = [
+  {sfx:'', key:'' , label:'अ'},
+  {sfx:'ा', key:'k', label:'आ'},
+  {sfx:'ि', key:'f', label:'इ', pre:true},
+  {sfx:'ी', key:'h', label:'ई'},
+  {sfx:'ु', key:'q', label:'उ'},
+  {sfx:'ू', key:'w', label:'ऊ'},
+  {sfx:'ृ', key:'`', label:'ऋ'},
+  {sfx:'े', key:'s', label:'ए'},
+  {sfx:'ै', key:'S', label:'ऐ'},
+  {sfx:'ो', key:'ks', label:'ओ'},
+  {sfx:'ौ', key:'kS', label:'औ'},
+  {sfx:'ं', key:'a', label:'अं'}
+];
+
+// build all barahkhadi questions
+const questions = [];
+for(const [cons, baseKey] of Object.entries(consonantMap)){
+  for(const m of matras){
+    const form = m.pre ? m.sfx + cons : cons + m.sfx;
+    const ans = baseKey + m.key;
+    questions.push({q:`Type for: ${form}`, a:ans});
+  }
+}
+
+// shuffle questions randomly
+for(let i=questions.length-1;i>0;i--){
+  const j = Math.floor(Math.random()*(i+1));
+  [questions[i],questions[j]]=[questions[j],questions[i]];
+}
+
+let current = 0;
+const total = questions.length;
+document.getElementById('total').textContent = total;
+
+function showQuestion(){
+  document.getElementById('questionBox').textContent = questions[current].q;
+  document.getElementById('answer').value = '';
+  document.getElementById('result').textContent = '';
+  document.getElementById('progress').textContent = current;
+}
+
+showQuestion();
+
+document.getElementById('submit').addEventListener('click',()=>{
+  const ans = document.getElementById('answer').value.trim();
+  if(ans === questions[current].a){
+    document.getElementById('result').textContent = '✅ Correct!';
+    current++;
+    if(current < total){
+      setTimeout(showQuestion,700);
+    } else {
+      document.getElementById('questionBox').textContent = '🎉 Quiz finished!';
+      document.getElementById('answer').style.display='none';
+      document.getElementById('submit').style.display='none';
+      document.getElementById('result').textContent = '';
+      document.getElementById('progress').textContent = total;
+    }
+  } else {
+    document.getElementById('result').textContent = '❌ Wrong, try again';
+  }
+});
+</script></body>
+</html>
