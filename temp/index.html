@@ -1,131 +1,212 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="hi">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>PDF Size Resizer</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-  <script src="https://unpkg.com/pdfjs-dist/build/pdf.min.js"></script>
+  <title>बारहखड़ी Quiz (Kruti Dev)</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #101826;
+      color: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .container {
+        width: 100%;
+        max-width: 500px;
+        padding: 0 10px;
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .card {
+      background: #1c2433;
+      padding: 24px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    #questionBox {
+      font-size: 2.5rem;
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 20px;
+      min-height: 40px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      border: 2px solid #333;
+      margin-top: 10px;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+      color: #000;
+      background: #fff;
+    }
+    input:focus {
+      outline: none;
+      border-color: #6ee7b7;
+    }
+    button {
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px 14px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #6ee7b7;
+      color: #022;
+      font-weight: bold;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+    button:hover {
+      background: #4cd5a0;
+    }
+    button:active {
+      transform: scale(0.99);
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+    .progress-box {
+      font-size: 1.1rem;
+      text-align: center;
+    }
+    .progress-box span {
+        font-weight: bold;
+        color: #6ee7b7;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center font-sans">
-  <div class="bg-white shadow-xl rounded-2xl p-6 w-full max-w-2xl">
-    <h1 class="text-3xl font-bold text-center mb-4">📄 PDF Size Resizer</h1>
-
-    <div class="mb-4">
-      <label class="block text-sm font-semibold mb-2">Choose PDF</label>
-      <input id="pdfFile" type="file" accept="application/pdf" class="w-full" />
+<body>
+  <div class="container">
+    <h1>बारहखड़ी Typing Practice</h1>
+    <div class="card">
+      <div id="questionBox">प्रश्न यहाँ आएगा</div>
+      <input id="answer" placeholder="यहां Kruti Dev key टाइप करें" />
+      <button id="submit">Submit</button>
+      <div class="result" id="result"></div>
     </div>
-
-    <div class="mb-4">
-      <label class="block text-sm font-semibold mb-2">Desired size (KB)</label>
-      <input id="desiredSize" type="number" min="1" placeholder="e.g. 500" class="w-full p-2 border rounded" />
-    </div>
-
-    <button id="resizeBtn" class="bg-blue-600 text-white w-full p-3 rounded-xl font-semibold hover:bg-blue-700">
-      Resize PDF
-    </button>
-
-    <button id="downloadBtn" class="hidden bg-green-600 text-white w-full p-3 mt-3 rounded-xl font-semibold hover:bg-green-700">
-      Download PDF
-    </button>
-
-    <div id="statusContainer" class="mt-6 p-4 rounded-lg bg-gray-50 border border-gray-200">
-      <p id="status" class="text-sm text-gray-700"></p>
+    <div class="card progress-box">
+      <div><strong>Progress:</strong> <span id="progress">0</span>/<span id="total"></span></div>
     </div>
   </div>
 
   <script>
-    const resizeBtn = document.getElementById('resizeBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const status = document.getElementById('status');
-    let finalBlobUrl = null;
+    // consonant mapping (Kruti Dev keys)
+    const consonantMap = {
+      'क':'d','ख':'[k','ग':'x','घ':'?k','च':'p','छ':'N','ज':'t','झ':'>','ट':'V','ठ':'B','ड':'M','ढ':'<','ण':'.k','त':'r','थ':'F','द':'n','ध':'/k','न':'u','प':'i','फ':'Q','ब':'c','भ':'Hk','म':'e','य':';','र':'j','ल':'y','व':'o','श':'\'k','ष':'"k','स':'l','ह':'g','क्ष':'{k','त्र':'=','ज्ञ':'K'
+    };
 
-    resizeBtn.addEventListener('click', processPDF);
-    downloadBtn.addEventListener('click', () => {
-      if (finalBlobUrl) {
-        const a = document.createElement("a");
-        a.href = finalBlobUrl;
-        a.download = "resized.pdf";
-        a.click();
-        URL.revokeObjectURL(finalBlobUrl); // cleanup after download
+    // vowel matras mapping
+    const matras = [
+      {sfx:'', key:'' , label:'अ'},
+      {sfx:'ा', key:'k', label:'आ'},
+      {sfx:'ि', key:'f', label:'इ', pre:true},
+      {sfx:'ी', key:'h', label:'ई'},
+      {sfx:'ु', key:'q', label:'उ'},
+      {sfx:'ू', key:'w', label:'ऊ'},
+      {sfx:'ृ', key:'`', label:'ऋ'},
+      {sfx:'े', key:'s', label:'ए'},
+      {sfx:'ै', key:'S', label:'ऐ'},
+      {sfx:'ो', key:'ks', label:'ओ'},
+      {sfx:'ौ', key:'kS', label:'औ'},
+      {sfx:'ं', key:'a', label:'अं'},
+      {sfx:':', key:'|', label:'अः'},
+      {sfx:'्', key:'~', label:'हलंत'}
+    ];
+
+    let questions = [];
+    let current = 0;
+    let total = 0;
+
+    function buildQuestions() {
+      questions = [];
+      for(const [cons, baseKey] of Object.entries(consonantMap)){
+        for(const m of matras){
+          const form = m.pre ? m.sfx + cons : cons + m.sfx;
+          let ans = baseKey;
+          if (m.pre) {
+            ans = m.key + ans;
+          } else {
+            ans += m.key;
+          }
+          questions.push({q:form, a:ans});
+        }
+      }
+      // Shuffle questions
+      for(let i=questions.length-1; i>0; i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [questions[i],questions[j]]=[questions[j],questions[i]];
+      }
+      total = questions.length;
+    }
+
+    function showQuestion(){
+      document.getElementById('questionBox').textContent = questions[current].q;
+      document.getElementById('answer').value = '';
+      document.getElementById('answer').style.borderColor = '#333';
+      document.getElementById('result').textContent = '';
+      document.getElementById('progress').textContent = current;
+    }
+
+    function initQuiz() {
+      current = 0;
+      buildQuestions();
+      document.getElementById('total').textContent = total;
+      document.getElementById('answer').style.display = 'block';
+      document.getElementById('submit').style.display = 'block';
+      showQuestion();
+    }
+
+    document.getElementById('submit').addEventListener('click',()=>{
+      const ans = document.getElementById('answer').value.trim();
+      if(ans === questions[current].a){
+        document.getElementById('result').textContent = '✅ सही!';
+        document.getElementById('answer').style.borderColor = '#4cd5a0';
+        current++;
+        if(current < total){
+          setTimeout(showQuestion, 700);
+        } else {
+          document.getElementById('questionBox').textContent = '🎉 बधाई हो, क्विज पूरा हुआ!';
+          document.getElementById('answer').style.display = 'none';
+          document.getElementById('submit').style.display = 'none';
+          document.getElementById('result').textContent = '';
+          document.getElementById('progress').textContent = total;
+
+          // Add a "Play Again" button
+          const playAgainBtn = document.createElement('button');
+          playAgainBtn.textContent = 'Play Again';
+          playAgainBtn.id = 'playAgainBtn';
+          playAgainBtn.onclick = () => {
+              document.querySelector('.card').appendChild(document.getElementById('answer'));
+              document.querySelector('.card').appendChild(document.getElementById('submit'));
+              playAgainBtn.remove();
+              initQuiz();
+          };
+          document.querySelector('.card').appendChild(playAgainBtn);
+        }
+      } else {
+        document.getElementById('result').textContent = '❌ गलत, फिर से कोशिश करें।';
+        document.getElementById('answer').style.borderColor = '#f56565';
       }
     });
 
-    async function processPDF() {
-      const fileInput = document.getElementById("pdfFile");
-      const desiredSizeKB = parseInt(document.getElementById("desiredSize").value, 10);
-
-      if (!fileInput.files.length || !desiredSizeKB || isNaN(desiredSizeKB) || desiredSizeKB <= 0) {
-        status.textContent = "⚠️ Upload a PDF and enter a valid target size.";
-        return;
-      }
-
-      const file = fileInput.files[0];
-      status.textContent = "⏳ Loading PDF...";
-      const arrayBuffer = await file.arrayBuffer();
-      const origKB = Math.round(arrayBuffer.byteLength / 1024);
-
-      // If already smaller, just use original
-      if (origKB <= desiredSizeKB) {
-        const blobOut = new Blob([arrayBuffer], { type: "application/pdf" });
-        finalBlobUrl = URL.createObjectURL(blobOut);
-        resizeBtn.classList.add("hidden");
-        downloadBtn.classList.remove("hidden");
-        status.innerHTML = `✅ Already small enough<br>Original: <b>${origKB} KB</b> → Final: <b>${origKB} KB</b>`;
-        return;
-      }
-
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-
-      // Compression loop parameters
-      let scale = 1.0;
-      let quality = 0.85;
-      let outputBytes = arrayBuffer;
-      let newKB = origKB;
-
-      while ((newKB >= origKB || newKB > desiredSizeKB) && scale > 0.2) {
-        const tempPdf = await PDFLib.PDFDocument.create();
-
-        for (let p = 1; p <= pdf.numPages; p++) {
-          const page = await pdf.getPage(p);
-          const viewport = page.getViewport({ scale });
-          const canvas = document.createElement("canvas");
-          canvas.width = viewport.width;
-          canvas.height = viewport.height;
-          const ctx = canvas.getContext("2d");
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          await page.render({ canvasContext: ctx, viewport }).promise;
-
-          const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", quality));
-          const buf = await blob.arrayBuffer();
-          const img = await tempPdf.embedJpg(buf);
-          const pageNew = tempPdf.addPage([img.width, img.height]);
-          pageNew.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
-        }
-
-        outputBytes = await tempPdf.save();
-        newKB = Math.round(outputBytes.byteLength / 1024);
-
-        // Lower quality first, then scale
-        if (newKB >= origKB || newKB > desiredSizeKB) {
-          if (quality > 0.4) {
-            quality -= 0.1;
-          } else {
-            scale -= 0.1;
-          }
-        }
-      }
-
-      const blobOut = new Blob([outputBytes], { type: "application/pdf" });
-      finalBlobUrl = URL.createObjectURL(blobOut);
-
-      resizeBtn.classList.add("hidden");
-      downloadBtn.classList.remove("hidden");
-
-      status.innerHTML = `✅ Compression successful<br>Original: <b>${origKB} KB</b> → Final: <b>${newKB} KB</b>`;
-    }
+    // Start the quiz
+    initQuiz();
   </script>
 </body>
 </html>
